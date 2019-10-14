@@ -28,7 +28,12 @@ namespace weather
         {
             services.AddControllers();
             services.AddHealthChecks()
-                    .AddCheck("live", () => HealthCheckResult.Healthy());
+                    .AddCheck("live", () => HealthCheckResult.Healthy())
+                    .AddRedis("redis", tags: new[] {"dependencies"})
+                    .AddSqlServer(
+                        Configuration["ConnectionStrings:DefaultConnection"], 
+                        tags: new[] {"dependencies"})
+                    ;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,6 +56,11 @@ namespace weather
             app.UseHealthChecks("/live", new HealthCheckOptions
             {
                 Predicate = r => r.Name.Contains("live")
+            });
+
+            app.UseHealthChecks("/ready", new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("dependencies")
             });
         }
     }
