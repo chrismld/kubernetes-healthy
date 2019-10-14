@@ -36,7 +36,11 @@ namespace weather
                                 HealthCheckResult.Unhealthy())
                     .AddRedis("redis", tags: new[] {"dependencies"})
                     .AddSqlServer(
-                        Configuration["ConnectionStrings:DefaultConnection"], 
+                        Configuration["ConnectionStrings:DefaultConnection"]
+                        .Replace(
+                            "{{MSSQL_SA_PASSWORD}}", 
+                            Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD")
+                        ), 
                         tags: new[] {"dependencies"})
                     ;
         }

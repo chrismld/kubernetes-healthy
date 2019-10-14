@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: weather
-        image: christianhxc/weather:1.0
+        image: christianhxc/weather:1.1
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -36,6 +36,12 @@ spec:
           periodSeconds: 5
           successThreshold: 2
           failureThreshold: 2
+        env:
+        - name: MSSQL_SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mssql
+              key: SA_PASSWORD 
 
 ---
 apiVersion: v1
