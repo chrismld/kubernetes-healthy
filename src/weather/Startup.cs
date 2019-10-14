@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ namespace weather
 {
     public class Startup
     {
+        bool isStableVersion = true;
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -28,7 +30,10 @@ namespace weather
         {
             services.AddControllers();
             services.AddHealthChecks()
-                    .AddCheck("live", () => HealthCheckResult.Healthy())
+                    .AddCheck("live", 
+                        () => isStableVersion ? 
+                                HealthCheckResult.Healthy() :
+                                HealthCheckResult.Unhealthy())
                     .AddRedis("redis", tags: new[] {"dependencies"})
                     .AddSqlServer(
                         Configuration["ConnectionStrings:DefaultConnection"], 
@@ -61,6 +66,15 @@ namespace weather
             app.UseHealthChecks("/ready", new HealthCheckOptions
             {
                 Predicate = r => r.Tags.Contains("dependencies")
+            });
+            
+            app.Map("/chaos", appBuilder =>
+            {
+                appBuilder.Run(async context =>
+                {
+                    isStableVersion = !isStableVersion;
+                    await context.Response.WriteAsync($"Is {Environment.MachineName} stable? {isStableVersion}");
+                });
             });
         }
     }
